@@ -109,9 +109,10 @@ def preprocess_and_split_to_tokens(sentences: ArrayLike) -> ArrayLike:
     :return: ArrayLike objects of ArrayLike objects of tokens.
         e.g., [["I", "like", "apples"], ["I", "love", "python3"]]
     """
-    method = 'mine_8675'
+    method = 'mine_861'
     methods = {'neive': 0,
                'mine_8675': 1,
+               'mine_861': 2,
                'mine': 2}
     
     if methods[method] == 0:
@@ -133,6 +134,23 @@ def preprocess_and_split_to_tokens(sentences: ArrayLike) -> ArrayLike:
     elif methods[method] == 2:
         result = []
         for i, sentence in enumerate(sentences):
+            special_characters = re.compile('[^\s\w]')
+            space_more_than_one = re.compile('\s\s+')
+            word_ends_with_s = re.compile('(\w{3,})s\s')
+            word_ends_with_ing = re.compile('(\w{3,})ing\s')
+            
+
+            sentence = sentence.lower()
+            sentence = special_characters.sub(' ', sentence) # Exclude special characters
+            sentence = word_ends_with_s.sub(r'\1 ', sentence)
+            sentence = word_ends_with_ing.sub(r'\1 ', sentence)
+            sentence = space_more_than_one.sub(' ', sentence)
+            word_list = sentence.split(' ')
+            word_list = [word for word in word_list if len(word) >= 3]
+            result.append(word_list)
+    elif methods[method] == 3:
+        result = []
+        for i, sentence in enumerate(sentences):
             nltk_stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves',
                               'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him',
                               'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its',
@@ -152,17 +170,25 @@ def preprocess_and_split_to_tokens(sentences: ArrayLike) -> ArrayLike:
             html_tags = re.compile(r'<.+?/>')
             special_characters = re.compile('[^\s\w]')
             space_more_than_one = re.compile('\s\s+')
-            word_longer_than_three_with_s = re.compile('(\w{3,})s\s')
+            word_ends_with_s = re.compile('(\w{3,})s\s')
+            word_ends_with_es = re.compile('(\w{3,})es\s')
+            word_ends_with_ies = re.compile('(\w{3,})ies\s')
+            word_ends_with_ing = re.compile('(\w{3,})ing\s')
+            word_ends_with_ed = re.compile('(\w{3,})ed\s')
             
 
             sentence = sentence.lower()
             #sentence = html_tags.sub(' ', sentence)          # Exclude html tags
             sentence = special_characters.sub(' ', sentence) # Exclude special characters
             #sentence = ' '.join([word for word in sentence.split(' ') if word not in nltk_stopwords])
-            #sentence = word_longer_than_three_with_s.sub(r'\1 ', sentence)
+            #sentence = word_ends_with_ies.sub(r'\1y ', sentence)
+            #sentence = word_ends_with_es.sub(r'\1 ', sentence)
+            sentence = word_ends_with_s.sub(r'\1 ', sentence)
+            sentence = word_ends_with_ing.sub(r'\1 ', sentence)
+            #sentence = word_ends_with_ed.sub(r'\1 ', sentence)
             sentence = space_more_than_one.sub(' ', sentence)
             word_list = sentence.split(' ')
-            word_list = [word[:8] for word in word_list if len(word) >= 3]
+            word_list = [word for word in word_list if len(word) >= 3]
             result.append(word_list)
         return result
     else:
