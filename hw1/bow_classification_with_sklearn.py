@@ -109,7 +109,65 @@ def preprocess_and_split_to_tokens(sentences: ArrayLike) -> ArrayLike:
     :return: ArrayLike objects of ArrayLike objects of tokens.
         e.g., [["I", "like", "apples"], ["I", "love", "python3"]]
     """
-    raise NotImplementedError
+    method = 'mine_8675'
+    methods = {'neive': 0,
+               'mine_8675': 1,
+               'mine': 2}
+    
+    if methods[method] == 0:
+        return [sentence.lower().split(' ') for sentence in sentences]
+    elif methods[method] == 1:
+        result = []
+        for i, sentence in enumerate(sentences):
+            special_characters = re.compile('[^\s\w]')
+            space_more_than_one = re.compile('\s\s+')
+            
+
+            sentence = sentence.lower()
+            sentence = special_characters.sub(' ', sentence) # Exclude special characters
+            sentence = space_more_than_one.sub(' ', sentence)
+            word_list = sentence.split(' ')
+            word_list = [word[:8] for word in word_list if len(word) >= 3]
+            result.append(word_list)
+        return result
+    elif methods[method] == 2:
+        result = []
+        for i, sentence in enumerate(sentences):
+            nltk_stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves',
+                              'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him',
+                              'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its',
+                              'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what',
+                              'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am',
+                              'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has',
+                              'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the',
+                              'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of',
+                              'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into',
+                              'through', 'during', 'before', 'after', 'above', 'below', 'to',
+                              'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under',
+                              'again', 'further', 'then', 'once', 'here', 'there', 'when',
+                              'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few',
+                              'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not',
+                              'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't',
+                              'can', 'will', 'just', 'don', 'should', 'now']
+            html_tags = re.compile(r'<.+?/>')
+            special_characters = re.compile('[^\s\w]')
+            space_more_than_one = re.compile('\s\s+')
+            word_longer_than_three_with_s = re.compile('(\w{3,})s\s')
+            
+
+            sentence = sentence.lower()
+            #sentence = html_tags.sub(' ', sentence)          # Exclude html tags
+            sentence = special_characters.sub(' ', sentence) # Exclude special characters
+            #sentence = ' '.join([word for word in sentence.split(' ') if word not in nltk_stopwords])
+            #sentence = word_longer_than_three_with_s.sub(r'\1 ', sentence)
+            sentence = space_more_than_one.sub(' ', sentence)
+            word_list = sentence.split(' ')
+            word_list = [word[:8] for word in word_list if len(word) >= 3]
+            result.append(word_list)
+        return result
+    else:
+        return [sentence.lower().split(' ') for sentence in sentences]
+    
 
 
 def create_bow(sentences: ArrayLike, vocab: Dict[str, int] = None,
@@ -131,10 +189,21 @@ def create_bow(sentences: ArrayLike, vocab: Dict[str, int] = None,
 
     if vocab is None:
         print("{} Vocab construction".format(msg_prefix))
-        raise NotImplementedError
+        vocab = dict()
+        for sentence in tokens_per_sentence:
+            for token in sentence:
+                if token not in vocab:
+                    vocab[token] = len(vocab)
 
     print("{} Bow construction".format(msg_prefix))
-    raise NotImplementedError
+    data_size  = len(tokens_per_sentence)
+    vocab_size = len(vocab)
+    bow_array = np.zeros((data_size, vocab_size), dtype=int)
+    for n, sentence in enumerate(tokens_per_sentence):
+        for token in sentence:
+            if token in vocab:
+                bow_array[n][vocab[token]] += 1
+    return vocab, bow_array
 
 
 def run(test_xs=None, test_ys=None, num_samples=10000, verbose=True):
